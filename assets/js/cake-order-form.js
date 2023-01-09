@@ -4,19 +4,14 @@ $(function () {
 
 function bindForm() {
     let form = $("#cakeForm");
-    let submitButton = form.find("button[type=submit]");
-
-    $(submitButton).on("click", function (event) {
-        event.preventDefault();
-        submitFormToApi(form);
-    });
+    validateForm(form);
 }
 
 function submitFormToApi(form) {
-    let formUrl = form.attr("action");
-    let data = form.serializeArray();
+    let formUrl = $(form).attr("action");
+    let data = $(form).serializeArray();
 
-    let json = JSON.stringify(convertArray(data));
+    let json = convertArrayToJSON(data);
 
     $.ajax({
         type: "POST",
@@ -38,7 +33,7 @@ function submitFormToApi(form) {
 
 }
 
-function convertArray(array) {
+function convertArrayToJSON(array) {
     let object = {};
 
     for (const index in array) {
@@ -47,7 +42,22 @@ function convertArray(array) {
             object[inputForm.name] = inputForm.value;
         }
     }
-    return object;
+    return JSON.stringify(object);
+}
+
+function validateForm(form) {
+    let properties = getFormValidationProperties();
+
+    $(form).validate({
+        rules: properties.rules,
+        messages: properties.messages,
+        submitHandler: function (form) {
+            submitFormToApi(form);
+        },
+        invalidHandler: function () {
+            showFailWhaleMessage();
+        }
+    });
 }
 
 function showFailWhaleMessage() {
@@ -55,4 +65,33 @@ function showFailWhaleMessage() {
         icon: "error",
         text: "Fail whale..."
     });
+}
+
+function getFormValidationProperties() {
+    return {
+        rules: {
+            firstname: {
+                required: true
+            },
+            lastname: {
+                required: true
+            },
+            phone: {
+                required: true
+            },
+            email: {
+                required: true,
+                email: true
+            },
+        },
+        messages: {
+            firstname: "Insira seu primeiro nome",
+            lastname: "Insira seu sobrenome",
+            phone: "Insira seu telefone",
+            email: {
+                required: "Insira seu email",
+                email: "Formato de e-mail inválido",
+            }
+        }
+    }
 }
